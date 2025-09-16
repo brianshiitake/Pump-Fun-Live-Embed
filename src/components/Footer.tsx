@@ -44,7 +44,7 @@ export default function Footer() {
             </a>
             <a href="https://x.com/BrianShiitake" target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm text-sky-400 hover:underline">
               <XIcon className="h-4 w-4" />
-              <span>Brian's X</span>
+              <span>Brian&apos;s X</span>
             </a>
           </div>
         </div>
