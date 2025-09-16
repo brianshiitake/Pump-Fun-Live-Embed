@@ -4,6 +4,14 @@ import { getPublicBaseUrl, validateMintId } from "@/lib/pump";
 
 type Props = { baseUrl?: string };
 
+type AspectMessage = {
+  type: "pump-embed:aspect";
+  embedId?: string;
+  vw: number;
+  vh: number;
+  aspect: number;
+};
+
 export default function Generator({ baseUrl }: Props) {
   const [input, setInput] = useState<string>("");
   const [mintId, setMintId] = useState<string | null>(null);
@@ -35,12 +43,13 @@ export default function Generator({ baseUrl }: Props) {
 
   useEffect(() => {
     function onMsg(ev: MessageEvent) {
-      const d: any = ev.data || {};
+      const raw = ev.data as unknown;
+      if (!raw || typeof raw !== "object") return;
+      const d = raw as Partial<AspectMessage>;
       if (d.type !== "pump-embed:aspect") return;
       if (d.embedId && d.embedId !== embedIdRef.current) return;
-      const a = Number(d.aspect);
-      if (!a || !isFinite(a) || a <= 0) return;
-      setAspect(a);
+      if (typeof d.aspect !== "number" || !isFinite(d.aspect) || d.aspect <= 0) return;
+      setAspect(d.aspect);
     }
     window.addEventListener("message", onMsg);
     return () => window.removeEventListener("message", onMsg);

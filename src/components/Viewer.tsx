@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 import { Room, RoomEvent, RemoteTrack } from "livekit-client";
 
 type Status = "idle" | "connecting" | "connected" | "waiting" | "error";
@@ -8,7 +9,7 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
   const vref = useRef<HTMLVideoElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
   const roomRef = useRef<Room | null>(null);
-  const aspectTimer = useRef<ReturnType<typeof setInterval> | null>(null);
+  const aspectTimer = useRef<number | null>(null);
   const lastDims = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
   const [status, setStatus] = useState<Status>("idle");
   const [err, setErr] = useState<string>("");
@@ -23,8 +24,8 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
       roomRef.current?.disconnect();
     } catch {}
     roomRef.current = null;
-    if (aspectTimer.current) {
-      clearInterval(aspectTimer.current as any);
+    if (aspectTimer.current !== null) {
+      window.clearInterval(aspectTimer.current);
       aspectTimer.current = null;
     }
     if (audioRef.current) {
@@ -58,10 +59,10 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
       if (v) {
         const onLoaded = () => postAspect();
         v.addEventListener("loadedmetadata", onLoaded, { once: true });
-        v.addEventListener("resize", postAspect as any);
+        v.addEventListener("resize", () => postAspect());
         setTimeout(postAspect, 300);
-        if (aspectTimer.current) clearInterval(aspectTimer.current as any);
-        aspectTimer.current = setInterval(() => postAspect(), 1500);
+        if (aspectTimer.current !== null) window.clearInterval(aspectTimer.current);
+        aspectTimer.current = window.setInterval(() => postAspect(), 1500);
       }
     }
     if (track.kind === "audio") {
@@ -91,8 +92,8 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
     roomRef.current = room;
     let gotVideo = false;
 
-    room.on(RoomEvent.TrackSubscribed, (track) => {
-      attachTrack(track as RemoteTrack);
+    room.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
+      attachTrack(track);
       if (track.kind === "video") gotVideo = true;
     });
 
@@ -117,9 +118,10 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
   useEffect(() => {
     stopped.current = false;
     reconnectAttempt.current = 0;
-    connect().catch((e: any) => {
+    connect().catch((e: unknown) => {
       setStatus("error");
-      setErr(e?.message || "Error");
+      const msg = e instanceof Error ? e.message : "Error";
+      setErr(msg);
     });
     return () => {
       stopped.current = true;
@@ -145,7 +147,7 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
       {showPumpButton && (
         <a href={`https://pump.fun/coin/${encodeURIComponent(mintId)}`} target="_blank" rel="noopener noreferrer" className="absolute top-3 left-3 inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-[var(--primary)] bg-black/60 text-[13px] text-white hover:bg-black/75">
           <span>Watch on</span>
-          <img src="/logo.png" alt="Pump.fun" className="h-4 w-auto" />
+          <Image src="/logo.png" alt="Pump.fun" width={64} height={16} className="h-4 w-auto" />
         </a>
       )}
       {showControls && (
