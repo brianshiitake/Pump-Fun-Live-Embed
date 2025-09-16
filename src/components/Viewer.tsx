@@ -140,7 +140,7 @@ export default function Viewer({ mintId, embedId, showBorder, showPumpButton, sh
     } catch {}
   }, []);
 
-  const borderCls = showBorder ? "border-2 border-[var(--primary)] rounded-xl overflow-hidden" : "";
+  const borderCls = showBorder ? "border-[3px] border-[var(--primary)] box-border" : "";
   return (
     <div className={`w-full h-full bg-black relative grid place-items-center ${borderCls}`}>
       <video ref={vref} className="w-full h-full object-contain bg-black" autoPlay playsInline muted />

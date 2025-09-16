@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useToast } from "@/components/Toast";
 import { getPublicBaseUrl, validateMintId } from "@/lib/pump";
 
 type Props = { baseUrl?: string };
@@ -25,6 +26,7 @@ export default function Generator({ baseUrl }: Props) {
   const [optBorder, setOptBorder] = useState<boolean>(true);
   const [optPump, setOptPump] = useState<boolean>(true);
   const [optControls, setOptControls] = useState<boolean>(true);
+  const { show } = useToast();
 
   const onSubmit = useCallback(
     (e: React.FormEvent) => {
@@ -62,13 +64,14 @@ export default function Generator({ baseUrl }: Props) {
       if (!aspect) return;
       const w = el.clientWidth || 0;
       if (!w) return;
-      const h = Math.round(w / aspect);
+      const extra = optBorder ? 3 : 0;
+      const h = Math.ceil(w / aspect) + extra;
       setPreviewHeight(h);
       if (iframeRef.current) iframeRef.current.style.height = `${h}px`;
     });
     ro.observe(el);
     return () => ro.disconnect();
-  }, [aspect]);
+  }, [aspect, optBorder]);
 
   const iframeSnippet = useMemo(() => {
     const base = `${host}/e?mintId=REPLACE_WITH_MINT`;
@@ -100,7 +103,8 @@ export default function Generator({ baseUrl }: Props) {
 
   const copy = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
-  }, []);
+    show("Copied to clipboard");
+  }, [show]);
 
   return (
     <div className="grid gap-6">
@@ -131,11 +135,11 @@ export default function Generator({ baseUrl }: Props) {
               <label className="flex items-center gap-2 text-sm text-foreground/80"><input type="checkbox" checked={optPump} onChange={(e) => setOptPump(e.target.checked)} className="accent-[var(--primary)]" /> Pump button</label>
               <label className="flex items-center gap-2 text-sm text-foreground/80"><input type="checkbox" checked={optControls} onChange={(e) => setOptControls(e.target.checked)} className="accent-[var(--primary)]" /> Mute/Unmute controls</label>
             </div>
-            <div ref={previewRef} className="w-full rounded-lg overflow-hidden bg-black">
+            <div ref={previewRef} className="w-full bg-black">
               <iframe
                 ref={iframeRef}
                 src={`/e?mintId=${encodeURIComponent(mintId)}&embedId=${encodeURIComponent(embedIdRef.current)}${optBorder ? "&border=1" : ""}${optPump ? "&pump=1" : ""}${optControls ? "&controls=1" : ""}`}
-                className="w-full"
+                className="block w-full"
                 style={{ height: previewHeight ? `${previewHeight}px` : undefined }}
                 allow="autoplay; fullscreen; picture-in-picture"
                 referrerPolicy="strict-origin-when-cross-origin"

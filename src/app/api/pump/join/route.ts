@@ -9,18 +9,28 @@ export async function POST(req: NextRequest) {
 
     const upstreamReq: PumpJoinUpstreamRequest = { mintId, viewer: true };
 
-    const joinRes = await fetch(`${PUMP.apiUrl}/livestream/join`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify(upstreamReq),
-      cache: "no-store",
-    });
-
-    if (!joinRes.ok) {
-      return NextResponse.json({ error: "Join failed" }, { status: 502 });
+    async function tryJoin(base: string): Promise<PumpJoinUpstreamResponse | null> {
+      try {
+        const r = await fetch(`${base}/livestream/join`, {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify(upstreamReq),
+          cache: "no-store",
+        });
+        if (!r.ok) return null;
+        const j = (await r.json()) as PumpJoinUpstreamResponse;
+        if (!j?.token) return null;
+        return j;
+      } catch {
+        return null;
+      }
     }
 
-    const { token, role } = (await joinRes.json()) as PumpJoinUpstreamResponse;
+    const primary = await tryJoin(PUMP.apiUrl);
+    const chosen = primary ?? (await tryJoin(PUMP.clientServerUrl));
+    if (!chosen) return NextResponse.json({ error: "Join failed" }, { status: 502 });
+
+    const { token, role } = chosen;
     if (!token) return NextResponse.json({ error: "No token" }, { status: 502 });
 
     return NextResponse.json({ livekitUrl: PUMP.livekitUrl, token, role });

@@ -137,3 +137,75 @@ body {
 .code-panel:hover .copy-btn {
   opacity: 1;
 }
+
+@keyframes bannerGlow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(0,255,159,0.25), 0 0 18px 0 rgba(255,59,129,0.12);
+  }
+  50% {
+    box-shadow: 0 0 0 4px rgba(0,255,159,0.25), 0 0 36px 0 rgba(255,59,129,0.25);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(0,255,159,0.25), 0 0 18px 0 rgba(255,59,129,0.12);
+  }
+}
+
+.promo-banner {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: linear-gradient(var(--muted), var(--muted)) padding-box,
+    linear-gradient(135deg, var(--accent), var(--primary)) border-box;
+  animation: bannerGlow 3s ease-in-out infinite;
+}
+
+@keyframes rotateAura {
+  to { transform: rotate(360deg); }
+}
+
+.promo-banner::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 18px;
+  background: conic-gradient(from 0deg, var(--accent), var(--primary), var(--accent));
+  filter: blur(10px);
+  opacity: 0.35;
+  z-index: -1;
+  animation: rotateAura 8s linear infinite;
+}
+
+.promo-link {
+  color: #60a5fa;
+  text-decoration: none;
+}
+
+.promo-link:hover {
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(96,165,250,0.45);
+}
+
+@keyframes pulsePing {
+  0% { transform: scale(1); opacity: 0.9; }
+  70% { transform: scale(1.8); opacity: 0; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+.promo-dot {
+  position: relative;
+  width: 8px;
+  height: 8px;
+  border-radius: 9999px;
+  background: var(--primary);
+  box-shadow: 0 0 12px rgba(0,255,159,0.55);
+  flex: 0 0 auto;
+}
+
+.promo-dot::after {
+  content: "";
+  position: absolute;
+  inset: -4px;
+  border-radius: inherit;
+  border: 2px solid var(--primary);
+  animation: pulsePing 1.8s ease-out infinite;
+}
